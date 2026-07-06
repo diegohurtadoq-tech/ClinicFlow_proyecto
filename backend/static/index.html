@@ -111,6 +111,7 @@ textarea{resize:vertical;min-height:80px}
 
 /* ── Agenda grid ── */
 .agenda-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+.agenda-slot.disabled{opacity:.45;cursor:not-allowed;filter:grayscale(.25)}
 .agenda-col{display:flex;flex-direction:column;gap:8px}
 .agenda-day-header{font-size:12px;font-weight:600;color:var(--muted);padding:6px 0;border-bottom:1px solid var(--border);text-align:center}
 .agenda-slot{padding:10px 12px;border-radius:6px;border:1px solid var(--border);background:var(--card);cursor:pointer;transition:all .15s}
@@ -196,7 +197,7 @@ textarea{resize:vertical;min-height:80px}
     <div class="auth-logo">ClinicFlow</div>
     <div class="auth-sub">Gestión clínica</div>
     <div class="auth-tabs">
-      <div class="auth-tab active" id="auth-tab-patient" onclick="setAuthRole('patient')">Paciente</div>
+      <div class="auth-tab active" id="auth-tab-patient" onclick="setAuthRole('patient')">Usuario</div>
       <div class="auth-tab" id="auth-tab-admin" onclick="setAuthRole('admin')">Administrador</div>
     </div>
 
@@ -284,7 +285,7 @@ textarea{resize:vertical;min-height:80px}
               <div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Instrucciones</div>
               <div style="display:flex;gap:10px;align-items:flex-start;font-size:13px">
                 <span style="background:var(--accent);color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px">1</span>
-                <span>Abre Telegram y busca nuestro bot: <strong id="tg-bot-name" style="color:var(--accent)">@ClinicFlowBot</strong></span>
+                <span>Abre Telegram y busca nuestro bot: <strong id="tg-bot-name" style="color:var(--accent)">@ClinicFlowAssistantBot</strong></span>
               </div>
               <div style="display:flex;gap:10px;align-items:flex-start;font-size:13px">
                 <span style="background:var(--accent);color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px">2</span>
@@ -307,11 +308,14 @@ textarea{resize:vertical;min-height:80px}
           <div id="tg-linked" style="display:none;flex-direction:column;gap:10px">
             <div style="background:var(--success-light);border:1px solid var(--success);border-radius:8px;padding:14px;display:flex;align-items:center;gap:10px">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-              <span style="font-size:13px;font-weight:500;color:var(--success)">Tu cuenta de Telegram está vinculada</span>
+              <span style="font-size:13px;font-weight:500;color:var(--success)">Tu cuenta de Telegram se encuentra vinculada exitosamente</span>
             </div>
             <p style="font-size:13px;color:var(--muted);line-height:1.6">
               Puedes gestionar tus citas directamente desde el chat del bot en Telegram.
             </p>
+            <button class="btn btn-danger" style="width:100%;justify-content:center" onclick="unlinkTelegramAccount()">
+              Desvincular Cuenta de Telegram
+            </button>
           </div>
 
           <div id="tg-error" style="display:none;background:var(--danger-light);border:1px solid var(--danger);border-radius:6px;padding:10px 12px;font-size:12px;color:var(--danger)"></div>
@@ -333,33 +337,33 @@ textarea{resize:vertical;min-height:80px}
   </div>
   <nav class="sb-nav">
     <div class="sb-section">Principal</div>
-    <div class="sb-item active" onclick="nav('dashboard')">
+    <div class="sb-item active" onclick="nav('dashboard')" id="nav-dashboard">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
       Dashboard
     </div>
-    <div class="sb-item" onclick="nav('appointments')">
+    <div class="sb-item" onclick="nav('appointments')" id="nav-appointments">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
       Citas médicas
     </div>
-    <div class="sb-item" onclick="nav('agenda')">
+    <div class="sb-item" onclick="nav('agenda')" id="nav-agenda">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
       Agenda semanal
     </div>
     <div class="sb-section">Gestión</div>
-    <div class="sb-item" onclick="nav('patients')">
+    <div class="sb-item" onclick="nav('patients')" id="nav-patients">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       Pacientes
     </div>
-    <div class="sb-item" onclick="nav('doctors')">
+    <div class="sb-item" onclick="nav('doctors')" id="nav-doctors">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a5 5 0 1 1 0 10 5 5 0 0 1 0-10z"/><path d="M2 20c0-4 4-7 10-7s10 3 10 7"/></svg>
       Médicos
     </div>
-    <div class="sb-item" onclick="nav('waitlist')">
+    <div class="sb-item" onclick="nav('waitlist')" id="nav-waitlist">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
       Lista de espera
     </div>
     <div class="sb-section">Asistente IA</div>
-    <div class="sb-item" onclick="nav('conversations')">
+    <div class="sb-item" onclick="nav('conversations')" id="nav-conversations">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
       Conversaciones
     </div>
@@ -369,7 +373,7 @@ textarea{resize:vertical;min-height:80px}
       <div class="sb-avatar" id="sb-avatar">A</div>
       <div class="sb-user-info">
         <div class="sb-user-name" id="sb-user-name">Administrador</div>
-        <div class="sb-user-role">Administrador</div>
+        <div class="sb-user-role" id="sb-user-role">Administrador</div>
       </div>
     </div>
     <button class="btn btn-outline btn-sm" style="width:100%;margin-top:12px" onclick="logout()">Cerrar sesión</button>
@@ -380,15 +384,29 @@ textarea{resize:vertical;min-height:80px}
 <div id="main">
   <div id="topbar">
     <h1 id="page-title">Dashboard</h1>
-    <button class="btn btn-outline btn-sm" onclick="openModal('modal-appointment')">+ Nueva cita</button>
-    <button class="btn btn-primary btn-sm" onclick="openModal('modal-appointment')">Agendar hora</button>
+    <div id="doctor-actions" style="display:none;gap:8px">
+      <button class="btn btn-outline btn-sm" onclick="openModal('modal-block')">Bloquear horario</button>
+    </div>
+    <div id="admin-actions">
+      <button class="btn btn-outline btn-sm" onclick="openModal('modal-appointment')">+ Nueva cita</button>
+      <button class="btn btn-primary btn-sm" onclick="openModal('modal-appointment')">Agendar hora</button>
+    </div>
   </div>
 
   <!-- ══════════════════════════════════════════
        PAGE: Dashboard
   ══════════════════════════════════════════ -->
   <div class="page active" id="page-dashboard">
-    <div class="stats-grid">
+    <div id="doctor-dashboard-only" style="display:none;margin-bottom:16px">
+      <div class="card">
+        <div class="card-header"><h2>Mi agenda</h2></div>
+        <div class="card-body">
+          <p style="font-size:13px;color:var(--muted);line-height:1.6">Aquí podrás ver tus citas del día y bloquear horarios cuando lo necesites.</p>
+          <button class="btn btn-primary" onclick="openModal('modal-block')">Bloquear Horario</button>
+        </div>
+      </div>
+    </div>
+    <div class="stats-grid" id="admin-stats-grid">
       <div class="stat-card stat-accent">
         <div class="stat-label">Citas hoy</div>
         <div class="stat-value" id="stat-appts-today">—</div>
@@ -470,7 +488,7 @@ textarea{resize:vertical;min-height:80px}
     </div>
 
     <!-- Métricas -->
-    <div class="three-col">
+    <div class="three-col" id="admin-metrics-grid">
       <div class="card">
         <div class="card-header"><h2>Especialidades activas</h2></div>
         <div class="card-body">
@@ -540,9 +558,10 @@ textarea{resize:vertical;min-height:80px}
         <option>Dr. Andrés Pinto — Neurología</option>
         <option>Dra. Isabel Lagos — Traumatología</option>
       </select>
-      <button class="btn btn-outline btn-sm">← Semana anterior</button>
+      <span id="agenda-doctor-label" style="display:none;font-size:13px;font-weight:600"></span>
+      <button class="btn btn-outline btn-sm" onclick="changeAgendaWeek(-1)">← Semana anterior</button>
       <span style="font-size:13px;font-weight:500" id="agenda-week-range"></span>
-      <button class="btn btn-outline btn-sm">Semana siguiente →</button>
+      <button class="btn btn-outline btn-sm" onclick="changeAgendaWeek(1)">Semana siguiente →</button>
       <div style="flex:1"></div>
       <button class="btn btn-outline btn-sm" onclick="openModal('modal-block')">Bloquear horario</button>
     </div>
@@ -809,6 +828,7 @@ textarea{resize:vertical;min-height:80px}
         <div class="form-group"><label>Hora inicio</label><input type="time" id="block-form-time-start" value="00:00"/></div>
         <div class="form-group"><label>Hora término</label><input type="time" id="block-form-time-end" value="23:59"/></div>
         <div class="form-group full"><label>Motivo del bloqueo</label><input type="text" id="block-form-reason" placeholder="Reunión, capacitación, vacaciones…"/></div>
+        <div class="form-group full" id="block-form-error" style="display:none;color:#b42318;font-size:13px;margin-top:4px"></div>
       </div>
     </div>
     <div class="modal-footer">
@@ -844,6 +864,20 @@ textarea{resize:vertical;min-height:80px}
 
 <script>
 // ─── Page navigation ───
+let currentWeekStart = null;
+let currentUser = null;
+
+function isDoctorUser(){
+  return (currentUser?.role || localStorage.getItem('cf_role')) === 'doctor';
+}
+function isDoctorRestrictedError(error){
+  return error?.message?.includes('HTTP 403') && isDoctorUser();
+}
+function refreshAgendaForCurrentUser(){
+  updateAgendaView(currentUser);
+  renderAgendaWeek();
+}
+
 const pageTitles = {
   dashboard:'Dashboard', appointments:'Citas médicas',
   agenda:'Agenda semanal', patients:'Pacientes',
@@ -854,7 +888,7 @@ function nav(id){
   document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
   document.querySelectorAll('.sb-item').forEach(i=>{
-    if(i.getAttribute('onclick')===`nav('${id}')`) i.classList.add('active');
+    if(i.id===`nav-${id}`) i.classList.add('active');
   });
   document.getElementById('page-title').textContent = pageTitles[id];
 }
@@ -864,6 +898,24 @@ function openModal(id){
   document.getElementById('modal-overlay').classList.add('open');
   document.querySelectorAll('.modal').forEach(m=>m.style.display='none');
   document.getElementById(id).style.display='block';
+
+  if(id==='modal-block'){
+    const currentRole = currentUser?.role || localStorage.getItem('cf_role');
+    const doctorSelect = document.getElementById('block-form-doctor');
+    const errorEl = document.getElementById('block-form-error');
+    if(errorEl){ errorEl.style.display='none'; errorEl.textContent=''; }
+    if(doctorSelect){
+      const isDoctor = currentRole === 'doctor';
+      doctorSelect.disabled = isDoctor;
+      doctorSelect.style.display = isDoctor ? 'none' : '';
+      if(isDoctor){
+        const doctorId = currentUser?.id ?? parseInt(localStorage.getItem('cf_user_id') || '0', 10);
+        if(doctorId){
+          doctorSelect.value = String(doctorId);
+        }
+      }
+    }
+  }
 }
 function closeModal(id){
   document.getElementById(id).style.display='none';
@@ -918,6 +970,13 @@ function formatDateTime(iso){
 function formatDate(iso){
   return new Date(iso).toLocaleDateString('es-CL', {day:'2-digit', month:'short', year:'numeric'});
 }
+function buildBlockDateTime(dateValue, timeValue){
+  if(!dateValue) return null;
+  const [year, month, day] = dateValue.split('-').map(Number);
+  const [hour, minute] = (timeValue || '00:00').split(':').map(Number);
+  const safeDate = new Date(year, month - 1, day, hour, minute, 0);
+  return `${safeDate.getFullYear()}-${String(safeDate.getMonth() + 1).padStart(2, '0')}-${String(safeDate.getDate()).padStart(2, '0')}T${String(safeDate.getHours()).padStart(2, '0')}:${String(safeDate.getMinutes()).padStart(2, '0')}:00`;
+}
 function capitalize(s){
   return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
 }
@@ -928,6 +987,66 @@ function startOfWeek(date){
   d.setHours(0, 0, 0, 0);
   return d;
 }
+function getAgendaTimeSlots(){
+  const slots = [];
+  for(let minutes = 8 * 60 + 30; minutes <= 17 * 60; minutes += 30){
+    const hours = Math.floor(minutes / 60).toString().padStart(2, '0');
+    const mins = (minutes % 60).toString().padStart(2, '0');
+    slots.push(`${hours}:${mins}`);
+  }
+  return slots;
+}
+function renderAgendaGrid(monday){
+  const container = document.getElementById('agenda-grid');
+  if(!container) return;
+  const dayAbbrevs = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie'];
+  const slots = getAgendaTimeSlots();
+  const now = new Date();
+  const startOfDay = new Date(now);
+  startOfDay.setHours(0, 0, 0, 0);
+  container.innerHTML = '';
+
+  for(let i = 0; i < 5; i++){
+    const col = document.createElement('div');
+    col.className = 'agenda-col';
+
+    const header = document.createElement('div');
+    header.className = 'agenda-day-header';
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    header.textContent = `${dayAbbrevs[i]} ${d.getDate()}`;
+    col.appendChild(header);
+
+    slots.forEach((time) => {
+      const [hours, minutes] = time.split(':').map(Number);
+      const slotDate = new Date(d);
+      slotDate.setHours(hours, minutes, 0, 0);
+      const isPast = slotDate < now;
+      const slot = document.createElement('div');
+      slot.className = `agenda-slot free${isPast ? ' disabled' : ''}`;
+      slot.innerHTML = `<div class="slot-time">${time}</div><div class="slot-name">${isPast ? 'Pasado' : 'Disponible'}</div>`;
+      if(isPast){
+        slot.onclick = () => {};
+      }
+      col.appendChild(slot);
+    });
+
+    container.appendChild(col);
+  }
+}
+function updateAgendaView(user){
+  const doctorSelect = document.getElementById('agenda-doctor');
+  const doctorLabel = document.getElementById('agenda-doctor-label');
+  const isDoctor = user?.role === 'doctor';
+
+  if(doctorSelect){
+    doctorSelect.style.display = isDoctor ? 'none' : '';
+  }
+  if(doctorLabel){
+    doctorLabel.style.display = isDoctor ? 'inline-block' : 'none';
+    doctorLabel.textContent = isDoctor ? `Mi agenda · ${user?.name || 'Médico'}` : '';
+  }
+}
 function initDateDisplays(){
   const today = new Date();
   const dateEl = document.getElementById('dashboard-today-date');
@@ -935,7 +1054,13 @@ function initDateDisplays(){
   if(dateEl) dateEl.textContent = today.toLocaleDateString('es-CL', {day:'2-digit', month:'short', year:'numeric'});
   if(weekdayEl) weekdayEl.textContent = capitalize(today.toLocaleDateString('es-CL', {weekday:'long'}));
 
-  const monday = startOfWeek(today);
+  if(!currentWeekStart){
+    currentWeekStart = startOfWeek(today);
+  }
+  renderAgendaWeek();
+}
+function renderAgendaWeek(){
+  const monday = new Date(currentWeekStart);
   const friday = new Date(monday);
   friday.setDate(monday.getDate() + 4);
   const rangeEl = document.getElementById('agenda-week-range');
@@ -943,12 +1068,17 @@ function initDateDisplays(){
     const monthLabel = capitalize(friday.toLocaleDateString('es-CL', {month:'short'})).replace('.', '');
     rangeEl.textContent = `${monday.getDate()} – ${friday.getDate()} ${monthLabel} ${friday.getFullYear()}`;
   }
-  const dayAbbrevs = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie'];
-  document.querySelectorAll('#agenda-grid .agenda-day-header').forEach((el, i) => {
-    const d = new Date(monday);
-    d.setDate(monday.getDate() + i);
-    el.textContent = `${dayAbbrevs[i]} ${d.getDate()}`;
-  });
+
+  renderAgendaGrid(monday);
+}
+function changeAgendaWeek(offset){
+  if(!currentWeekStart){
+    currentWeekStart = startOfWeek(new Date());
+  }
+  const next = new Date(currentWeekStart);
+  next.setDate(next.getDate() + offset * 7);
+  currentWeekStart = next;
+  renderAgendaWeek();
 }
 function initials(name){
   const parts = (name||'').trim().split(/\s+/).filter(Boolean);
@@ -974,6 +1104,10 @@ let doctorStatusById = {};
 
 async function loadAll(){
   try{
+    if(isDoctorUser()){
+      refreshAgendaForCurrentUser();
+      return;
+    }
     const [p, d] = await Promise.all([apiGet('/api/patients'), apiGet('/api/doctors')]);
     patients = p; doctors = d;
     populateSelects();
@@ -987,7 +1121,9 @@ async function loadAll(){
     renderConversations(conversations);
     await refreshDashboard();
   }catch(e){
-    console.error('No se pudo cargar el dashboard:', e);
+    if(!isDoctorRestrictedError(e)){
+      console.error('No se pudo cargar el dashboard:', e);
+    }
   }
 }
 function populateSelect(id, items, labelFn, valueFn){
@@ -1015,14 +1151,31 @@ async function refreshConversations(){
   renderConversations(conversations);
 }
 async function refreshPatients(){
-  patients = await apiGet('/api/patients');
-  populateSelects();
-  renderPatients(patients);
+  if(isDoctorUser()) return;
+  try{
+    patients = await apiGet('/api/patients');
+    populateSelects();
+    renderPatients(patients);
+  }catch(e){
+    if(!isDoctorRestrictedError(e)){
+      console.error('No se pudo refrescar pacientes:', e);
+    }
+  }
 }
 async function refreshDoctors(){
-  doctors = await apiGet('/api/doctors');
-  populateSelects();
-  await refreshDashboard();
+  if(isDoctorUser()){
+    refreshAgendaForCurrentUser();
+    return;
+  }
+  try{
+    doctors = await apiGet('/api/doctors');
+    populateSelects();
+    await refreshDashboard();
+  }catch(e){
+    if(!isDoctorRestrictedError(e)){
+      console.error('No se pudo refrescar doctores:', e);
+    }
+  }
 }
 async function refreshDashboard(){
   const stats = await apiGet('/api/dashboard/stats');
@@ -1259,23 +1412,56 @@ async function saveDoctor(){
   }catch(e){ alert('No se pudo registrar el médico: '+e.message); }
 }
 async function saveBlockSlot(){
-  const doctorId = parseInt(document.getElementById('block-form-doctor').value, 10);
+  const doctorSelect = document.getElementById('block-form-doctor');
+  const errorEl = document.getElementById('block-form-error');
+  const currentRole = currentUser?.role || localStorage.getItem('cf_role');
+  const fallbackDoctorId = currentUser?.id ?? parseInt(localStorage.getItem('cf_user_id') || '0', 10);
+  let doctorId = parseInt(doctorSelect?.value || '0', 10);
+  if(currentRole === 'doctor' && fallbackDoctorId){
+    doctorId = fallbackDoctorId;
+    if(doctorSelect){ doctorSelect.value = String(doctorId); }
+  }
   const dateStart = document.getElementById('block-form-date-start').value;
   const dateEnd = document.getElementById('block-form-date-end').value || dateStart;
   const timeStart = document.getElementById('block-form-time-start').value || '00:00';
   const timeEnd = document.getElementById('block-form-time-end').value || '23:59';
   const reason = document.getElementById('block-form-reason').value.trim();
-  if(!doctorId || !dateStart || !reason){ alert('Completa médico, fecha de inicio y motivo.'); return; }
+  if(errorEl){ errorEl.style.display='none'; errorEl.textContent=''; }
+  if(!doctorId || !dateStart || !reason){
+    const message = 'Completa médico, fecha de inicio y motivo.';
+    if(errorEl){ errorEl.textContent = message; errorEl.style.display='block'; }
+    console.error(message);
+    return;
+  }
+  const startDatetime = buildBlockDateTime(dateStart, timeStart);
+  const endDatetime = buildBlockDateTime(dateEnd, timeEnd);
+  if(!startDatetime || !endDatetime){
+    const message = 'No se pudo construir el rango de bloqueo.';
+    if(errorEl){ errorEl.textContent = message; errorEl.style.display='block'; }
+    console.error(message);
+    return;
+  }
   try{
     await apiSend('/api/schedule-blocks', 'POST', {
       doctor_id: doctorId,
-      start_datetime: `${dateStart}T${timeStart}:00`,
-      end_datetime: `${dateEnd}T${timeEnd}:00`,
+      start_datetime: startDatetime,
+      end_datetime: endDatetime,
+      start_date: dateStart,
+      end_date: dateEnd,
+      start_time: timeStart,
+      end_time: timeEnd,
       reason,
     });
     closeModal('modal-block');
-    await refreshDoctors();
-  }catch(e){ alert('No se pudo bloquear el horario: '+e.message); }
+    if(isDoctorUser()){
+      refreshAgendaForCurrentUser();
+    } else {
+      await refreshDoctors();
+    }
+  }catch(e){
+    console.error('No se pudo bloquear el horario:', e);
+    if(errorEl){ errorEl.textContent = e.message || 'No se pudo completar el bloqueo.'; errorEl.style.display='block'; }
+  }
 }
 
 // ─── Waitlist ───
@@ -1448,17 +1634,39 @@ function showAuthScreen(){
   document.getElementById('patient-app').style.display = 'none';
 }
 function logout(){
+  currentUser = null;
   localStorage.removeItem('cf_token');
   localStorage.removeItem('cf_role');
+  localStorage.removeItem('cf_user_id');
   showAuthScreen();
 }
 async function routeAfterLogin(user){
+  currentUser = user;
+  localStorage.setItem('cf_user_id', String(user.id));
   document.getElementById('auth-screen').style.display = 'none';
-  if(user.role==='admin'){
+  if(user.role==='admin' || user.role==='doctor'){
     document.getElementById('admin-app').style.display = 'block';
     document.getElementById('patient-app').style.display = 'none';
     document.getElementById('sb-user-name').textContent = user.name;
     document.getElementById('sb-avatar').textContent = initials(user.name);
+    document.getElementById('sb-user-role').textContent = user.role === 'doctor' ? 'Médico' : 'Administrador';
+    const isDoctor = user.role === 'doctor';
+    localStorage.setItem('cf_doctor_id', user.doctor_id || '');
+    document.getElementById('doctor-actions').style.display = isDoctor ? 'flex' : 'none';
+    document.getElementById('admin-actions').style.display = isDoctor ? 'none' : 'flex';
+    document.getElementById('doctor-dashboard-only').style.display = isDoctor ? 'block' : 'none';
+    document.getElementById('admin-stats-grid').style.display = isDoctor ? 'none' : 'grid';
+    document.getElementById('admin-metrics-grid').style.display = isDoctor ? 'none' : 'grid';
+    document.getElementById('nav-patients').style.display = isDoctor ? 'none' : 'flex';
+    document.getElementById('nav-doctors').style.display = isDoctor ? 'none' : 'flex';
+    document.getElementById('nav-waitlist').style.display = isDoctor ? 'none' : 'flex';
+    document.getElementById('nav-conversations').style.display = isDoctor ? 'none' : 'flex';
+    updateAgendaView(user);
+    if(isDoctor){
+      nav('agenda');
+    } else {
+      nav('dashboard');
+    }
     await loadAll();
   }else{
     document.getElementById('patient-app').style.display = 'flex';
@@ -1577,7 +1785,7 @@ async function generateTelegramCode(){
     document.getElementById('tg-start-cmd').textContent = `/start ${code}`;
 
     // Nombre del bot desde meta o fallback
-    const botName = window.TELEGRAM_BOT_USERNAME || '@ClinicFlowBot';
+    const botName = window.TELEGRAM_BOT_USERNAME || '@ClinicFlowAssistantBot';
     document.getElementById('tg-bot-name').textContent = botName;
 
     // Contador regresivo de 10 minutos
@@ -1614,15 +1822,49 @@ function startTelegramCountdown(secondsTotal){
   _tgTimerInterval = setInterval(tick, 1000);
 }
 
+async function unlinkTelegramAccount(){
+  const errorEl = document.getElementById('tg-error');
+  errorEl.style.display = 'none';
+
+  const btn = event.currentTarget;
+  const origText = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = 'Desvinculando…';
+
+  try{
+    await apiSend('/api/telegram/link', 'DELETE', {});
+    showTelegramUnlinkedState();
+  }catch(e){
+    errorEl.textContent = e.message || 'No se pudo desvincular la cuenta. Intenta de nuevo.';
+    errorEl.style.display = 'block';
+    btn.disabled = false;
+    btn.innerHTML = origText;
+  }
+}
+
+function showTelegramUnlinkedState(){
+  document.getElementById('tg-unlinked').style.display = 'block';
+  document.getElementById('tg-code-panel').style.display = 'none';
+  document.getElementById('tg-linked').style.display = 'none';
+  document.getElementById('tg-error').style.display = 'none';
+  if(_tgTimerInterval) clearInterval(_tgTimerInterval);
+}
+
+function showTelegramLinkedState(){
+  document.getElementById('tg-unlinked').style.display = 'none';
+  document.getElementById('tg-code-panel').style.display = 'none';
+  document.getElementById('tg-linked').style.display = 'flex';
+  document.getElementById('tg-error').style.display = 'none';
+  if(_tgTimerInterval) clearInterval(_tgTimerInterval);
+}
+
 async function checkTelegramLinkStatus(){
-  // Consulta si el paciente ya tiene telegram_id vinculado
   try{
     const me = await apiGet('/api/auth/me');
     if(me.telegram_id){
-      document.getElementById('tg-unlinked').style.display   = 'none';
-      document.getElementById('tg-code-panel').style.display = 'none';
-      document.getElementById('tg-linked').style.display     = 'flex';
-      if(_tgTimerInterval) clearInterval(_tgTimerInterval);
+      showTelegramLinkedState();
+    } else {
+      showTelegramUnlinkedState();
     }
   }catch(e){ /* silencioso */ }
 }

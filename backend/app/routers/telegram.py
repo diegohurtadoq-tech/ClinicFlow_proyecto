@@ -52,3 +52,19 @@ def generate_link_code(
 
     except ClinicFlowError as exc:
         raise HTTPException(status_code=400, detail=exc.message) from exc
+
+
+@router.delete("/link")
+def unlink_telegram_account(
+    current_user: User = Depends(require_role("patient")),
+    db: Session = Depends(get_db),
+) -> dict[str, str]:
+    """Desvincula la cuenta de Telegram del paciente autenticado."""
+    patient = db.get(Patient, current_user.id)
+    if patient is None:
+        raise HTTPException(status_code=404, detail="Paciente no encontrado")
+
+    patient.telegram_id = None
+    db.commit()
+
+    return {"message": "Cuenta de Telegram desvinculada correctamente."}

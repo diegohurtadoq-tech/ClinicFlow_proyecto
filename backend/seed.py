@@ -18,6 +18,7 @@ from app.models.user import Admin, Doctor, Patient
 
 ADMIN_PASSWORD = "admin123"
 PATIENT_PASSWORD = "paciente123"
+DOCTOR_PASSWORD = "medico123"
 
 DOCTORS = [
     ("Dr. Roberto Muñoz", "rmunoz@clinicflow.cl", "Medicina General"),
@@ -43,44 +44,57 @@ def seed() -> None:
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     try:
-        if db.query(Doctor).first() is not None:
-            print("La base de datos ya tiene datos; no se vuelve a sembrar.")
-            return
-
-        db.add(
-            Admin(
+        admin = db.query(Admin).filter_by(email="admin@clinicflow.cl").first()
+        if admin is None:
+            admin = Admin(
                 name="Jorge Zambrano",
                 email="admin@clinicflow.cl",
                 password_hash=hash_password(ADMIN_PASSWORD),
             )
-        )
+            db.add(admin)
+        if not admin.password_hash:
+            admin.password_hash = hash_password(ADMIN_PASSWORD)
 
         doctors = []
         for name, email, specialty in DOCTORS:
-            doctor = Doctor(name=name, email=email, specialty=specialty)
-            db.add(doctor)
+            doctor = db.query(Doctor).filter_by(email=email).first()
+            if doctor is None:
+                doctor = Doctor(name=name, email=email, specialty=specialty)
+                db.add(doctor)
+            doctor.name = name
+            doctor.specialty = specialty
+            if not doctor.password_hash:
+                doctor.password_hash = hash_password(DOCTOR_PASSWORD)
             doctors.append(doctor)
         db.flush()
 
         for doctor in doctors:
-            for day in range(0, 5):  # lunes a viernes
-                db.add(
-                    Schedule(
-                        doctor_id=doctor.id,
-                        day_of_week=day,
-                        start_time=dt.time(9, 0),
-                        end_time=dt.time(17, 0),
-                        slot_minutes=30,
-                        capacity=1,
+            if not db.query(Schedule).filter_by(doctor_id=doctor.id).first():
+                for day in range(0, 5):  # lunes a viernes
+                    db.add(
+                        Schedule(
+                            doctor_id=doctor.id,
+                            day_of_week=day,
+                            start_time=dt.time(9, 0),
+                            end_time=dt.time(17, 0),
+                            slot_minutes=30,
+                            capacity=1,
+                        )
                     )
-                )
 
         for name, email in PATIENTS:
-            db.add(Patient(name=name, email=email, password_hash=hash_password(PATIENT_PASSWORD)))
+            patient = db.query(Patient).filter_by(email=email).first()
+            if patient is None:
+                patient = Patient(name=name, email=email)
+                db.add(patient)
+            patient.name = name
+            if not patient.password_hash:
+                patient.password_hash = hash_password(PATIENT_PASSWORD)
 
         db.commit()
-        print(f"Sembrados {len(doctors)} doctores y {len(PATIENTS)} pacientes con agenda lunes-viernes 09:00-17:00.")
+        print(f"Sembrados/actualizados {len(doctors)} doctores y {len(PATIENTS)} pacientes con agenda lunes-viernes 09:00-17:00.")
         print(f"Login admin: admin@clinicflow.cl / {ADMIN_PASSWORD}")
+        print(f"Login medico (cualquiera de los de arriba): <su email> / {DOCTOR_PASSWORD}")
         print(f"Login paciente (cualquiera de los de arriba): <su email> / {PATIENT_PASSWORD}")
     finally:
         db.close()

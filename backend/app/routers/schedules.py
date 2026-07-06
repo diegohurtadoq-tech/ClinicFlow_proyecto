@@ -17,7 +17,7 @@ from ..schemas.schedule import (
 )
 from ..services.schedule_service import ScheduleService
 
-router = APIRouter(prefix="/api", tags=["Agenda"], dependencies=[Depends(require_role("admin"))])
+router = APIRouter(prefix="/api", tags=["Agenda"], dependencies=[Depends(require_role("admin", "doctor"))])
 _service = ScheduleService()
 
 

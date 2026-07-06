@@ -4,7 +4,22 @@ from __future__ import annotations
 
 import datetime as dt
 
+from app.schemas.schedule import ScheduleBlockCreate
 from app.services.schedule_service import ScheduleService
+
+
+def test_schedule_block_create_accepts_legacy_field_names():
+    payload = {
+        "doctor_id": 1,
+        "start_date": "2026-08-01",
+        "start_time": "09:00",
+        "end_date": "2026-08-01",
+        "end_time": "11:00",
+        "reason": "Capacitación",
+    }
+    block = ScheduleBlockCreate.model_validate(payload)
+    assert block.start_datetime == dt.datetime(2026, 8, 1, 9, 0)
+    assert block.end_datetime == dt.datetime(2026, 8, 1, 11, 0)
 
 
 def test_available_within_schedule(db_session, doctor, next_monday_10am):
