@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ClinicFlow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F7F7F5;--card:#FFFFFF;--border:#E8E8E6;--border-strong:#D0D0CE;
+  --text:#1A1A1A;--muted:#6B6B6B;--accent:#2563EB;--accent-light:#EFF4FF;
+  --danger:#DC2626;--danger-light:#FEF2F2;
+  --success:#16A34A;--success-light:#F0FDF4;
+  --warn:#D97706;--warn-light:#FFFBEB;
+  --sidebar:220px;--header:56px;
+}
+body{font-family:'Inter',sans-serif;font-size:14px;background:var(--bg);color:var(--text);display:flex;min-height:100vh}
+
+/* ── Sidebar ── */
+#sidebar{width:var(--sidebar);min-height:100vh;background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;z-index:100}
+.sb-logo{padding:20px 20px 16px;border-bottom:1px solid var(--border)}
+.sb-logo span{font-size:16px;font-weight:600;letter-spacing:-.4px}
+.sb-logo small{display:block;font-size:11px;color:var(--muted);margin-top:2px}
+.sb-nav{flex:1;padding:12px 0}
+.sb-section{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;padding:16px 20px 6px}
+.sb-item{display:flex;align-items:center;gap:10px;padding:8px 20px;cursor:pointer;color:var(--muted);transition:color .15s,background .15s;border-left:2px solid transparent;font-size:13px}
+.sb-item:hover{color:var(--text);background:var(--bg)}
+.sb-item.active{color:var(--accent);background:var(--accent-light);border-left-color:var(--accent);font-weight:500}
+.sb-item svg{flex-shrink:0;opacity:.7}
+.sb-item.active svg{opacity:1}
+.sb-footer{padding:16px 20px;border-top:1px solid var(--border)}
+.sb-user{display:flex;align-items:center;gap:10px}
+.sb-avatar{width:32px;height:32px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0}
+.sb-user-info{min-width:0}
+.sb-user-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sb-user-role{font-size:11px;color:var(--muted)}
+
+/* ── Main ── */
+#main{margin-left:var(--sidebar);flex:1;display:flex;flex-direction:column;min-height:100vh}
+#topbar{height:var(--header);background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px;gap:16px;position:sticky;top:0;z-index:50}
+#topbar h1{font-size:15px;font-weight:600;flex:1;letter-spacing:-.2px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid transparent;transition:all .15s;font-family:inherit}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn-primary:hover{background:#1d4fd8}
+.btn-outline{background:var(--card);color:var(--text);border-color:var(--border-strong)}
+.btn-outline:hover{background:var(--bg)}
+.btn-danger{background:var(--danger);color:#fff;border-color:var(--danger)}
+.btn-sm{padding:5px 10px;font-size:12px}
+
+/* ── Pages ── */
+.page{display:none;padding:28px;flex-direction:column;gap:24px}
+.page.active{display:flex}
+
+/* ── Cards ── */
+.card{background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.card-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.card-header h2{font-size:14px;font-weight:600}
+.card-body{padding:20px}
+
+/* ── Stat cards ── */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:20px}
+.stat-label{font-size:11px;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+.stat-value{font-size:28px;font-weight:600;letter-spacing:-.5px;line-height:1}
+.stat-sub{font-size:12px;color:var(--muted);margin-top:6px}
+.stat-accent{border-left:3px solid var(--accent)}
+.stat-success{border-left:3px solid var(--success)}
+.stat-warn{border-left:3px solid var(--warn)}
+.stat-danger{border-left:3px solid var(--danger)}
+
+/* ── Tables ── */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:10px 16px;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:12px 16px;border-bottom:1px solid var(--border);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg)}
+tbody tr{cursor:default}
+
+/* ── Badges ── */
+.badge{display:inline-flex;align-items:center;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:500;border-left:2px solid;white-space:nowrap}
+.badge-confirmed{background:var(--success-light);color:var(--success);border-left-color:var(--success)}
+.badge-pending{background:var(--warn-light);color:var(--warn);border-left-color:var(--warn)}
+.badge-cancelled{background:var(--danger-light);color:var(--danger);border-left-color:var(--danger)}
+.badge-completed{background:var(--bg);color:var(--muted);border-left-color:var(--border-strong)}
+.badge-waiting{background:var(--accent-light);color:var(--accent);border-left-color:var(--accent)}
+.badge-high{background:var(--danger-light);color:var(--danger);border-left-color:var(--danger)}
+.badge-normal{background:var(--bg);color:var(--muted);border-left-color:var(--border-strong)}
+
+/* ── Forms ── */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.form-group{display:flex;flex-direction:column;gap:6px}
+.form-group.full{grid-column:1/-1}
+label{font-size:12px;font-weight:500;color:var(--muted)}
+input,select,textarea{font-family:inherit;font-size:13px;padding:8px 12px;border:1px solid var(--border-strong);border-radius:6px;background:var(--card);color:var(--text);outline:none;transition:border .15s}
+input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+textarea{resize:vertical;min-height:80px}
+
+/* ── Modal ── */
+#modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:200;align-items:center;justify-content:center}
+#modal-overlay.open{display:flex}
+.modal{background:var(--card);border-radius:10px;width:520px;max-width:calc(100vw - 40px);max-height:calc(100vh - 80px);overflow-y:auto;border:1px solid var(--border)}
+.modal-header{padding:20px 24px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.modal-header h3{font-size:15px;font-weight:600}
+.modal-body{padding:24px}
+.modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px}
+.modal-close{background:none;border:none;cursor:pointer;color:var(--muted);font-size:18px;line-height:1;padding:2px}
+.modal-close:hover{color:var(--text)}
+
+/* ── Agenda grid ── */
+.agenda-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+.agenda-col{display:flex;flex-direction:column;gap:8px}
+.agenda-day-header{font-size:12px;font-weight:600;color:var(--muted);padding:6px 0;border-bottom:1px solid var(--border);text-align:center}
+.agenda-slot{padding:10px 12px;border-radius:6px;border:1px solid var(--border);background:var(--card);cursor:pointer;transition:all .15s}
+.agenda-slot:hover{border-color:var(--accent);background:var(--accent-light)}
+.agenda-slot .slot-time{font-size:11px;color:var(--muted);margin-bottom:3px}
+.agenda-slot .slot-name{font-size:12px;font-weight:500}
+.agenda-slot .slot-spec{font-size:11px;color:var(--muted)}
+.agenda-slot.occupied{background:var(--accent-light);border-color:var(--accent)}
+.agenda-slot.blocked{background:var(--danger-light);border-color:var(--danger)}
+.agenda-slot.free{background:var(--success-light);border-color:var(--success)}
+
+/* ── Conversation log ── */
+.conv-list{display:flex;flex-direction:column;gap:12px}
+.conv-item{border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.conv-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;background:var(--card)}
+.conv-header:hover{background:var(--bg)}
+.conv-meta{display:flex;align-items:center;gap:12px}
+.conv-patient{font-weight:500;font-size:13px}
+.conv-time{font-size:12px;color:var(--muted)}
+.conv-messages{display:none;padding:16px;background:var(--bg);gap:8px;flex-direction:column}
+.conv-messages.open{display:flex}
+.msg{max-width:72%;padding:8px 12px;border-radius:6px;font-size:13px;line-height:1.5}
+.msg-bot{background:var(--card);border:1px solid var(--border);align-self:flex-start}
+.msg-user{background:var(--accent);color:#fff;align-self:flex-end}
+.msg-label{font-size:10px;color:var(--muted);margin-bottom:2px}
+
+/* ── Waitlist ── */
+.waitlist-item{display:flex;align-items:center;gap:16px;padding:14px 20px;border-bottom:1px solid var(--border)}
+.waitlist-item:last-child{border-bottom:none}
+.wl-rank{width:28px;height:28px;border-radius:50%;background:var(--bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0}
+.wl-info{flex:1;min-width:0}
+.wl-name{font-weight:500;font-size:13px}
+.wl-detail{font-size:12px;color:var(--muted);margin-top:2px}
+.wl-actions{display:flex;gap:8px}
+
+/* ── Misc ── */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px}
+.section-title{font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px}
+.empty-state{text-align:center;padding:40px;color:var(--muted);font-size:13px}
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block;flex-shrink:0}
+.dot-green{background:var(--success)}
+.dot-orange{background:var(--warn)}
+.dot-red{background:var(--danger)}
+.flex{display:flex}.gap-8{gap:8px}.gap-12{gap:12px}.items-center{align-items:center}
+.text-muted{color:var(--muted)}.text-sm{font-size:12px}
+.avatar{width:30px;height:30px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--muted);flex-shrink:0}
+</style>
+</head>
+<body>
+
+<!-- ─── Sidebar ─── -->
+<aside id="sidebar">
+  <div class="sb-logo">
+    <span>ClinicFlow</span>
+    <small>Gestión clínica</small>
+  </div>
+  <nav class="sb-nav">
+    <div class="sb-section">Principal</div>
+    <div class="sb-item active" onclick="nav('dashboard')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      Dashboard
+    </div>
+    <div class="sb-item" onclick="nav('appointments')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Citas médicas
+    </div>
+    <div class="sb-item" onclick="nav('agenda')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Agenda semanal
+    </div>
+    <div class="sb-section">Gestión</div>
+    <div class="sb-item" onclick="nav('patients')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Pacientes
+    </div>
+    <div class="sb-item" onclick="nav('doctors')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a5 5 0 1 1 0 10 5 5 0 0 1 0-10z"/><path d="M2 20c0-4 4-7 10-7s10 3 10 7"/></svg>
+      Médicos
+    </div>
+    <div class="sb-item" onclick="nav('waitlist')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      Lista de espera
+    </div>
+    <div class="sb-section">Asistente IA</div>
+    <div class="sb-item" onclick="nav('conversations')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      Conversaciones
+    </div>
+  </nav>
+  <div class="sb-footer">
+    <div class="sb-user">
+      <div class="sb-avatar">JZ</div>
+      <div class="sb-user-info">
+        <div class="sb-user-name">Jorge Zambrano</div>
+        <div class="sb-user-role">Administrador</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- ─── Main ─── -->
+<div id="main">
+  <div id="topbar">
+    <h1 id="page-title">Dashboard</h1>
+    <button class="btn btn-outline btn-sm" onclick="openModal('modal-appointment')">+ Nueva cita</button>
+    <button class="btn btn-primary btn-sm" onclick="openModal('modal-appointment')">Agendar hora</button>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       PAGE: Dashboard
+  ══════════════════════════════════════════ -->
+  <div class="page active" id="page-dashboard">
+    <div class="stats-grid">
+      <div class="stat-card stat-accent">
+        <div class="stat-label">Citas hoy</div>
+        <div class="stat-value">24</div>
+        <div class="stat-sub">↑ 3 más que ayer</div>
+      </div>
+      <div class="stat-card stat-success">
+        <div class="stat-label">Confirmadas</div>
+        <div class="stat-value">18</div>
+        <div class="stat-sub">75% del total</div>
+      </div>
+      <div class="stat-card stat-warn">
+        <div class="stat-label">En lista de espera</div>
+        <div class="stat-value">7</div>
+        <div class="stat-sub">2 con prioridad alta</div>
+      </div>
+      <div class="stat-card stat-danger">
+        <div class="stat-label">Cancelaciones</div>
+        <div class="stat-value">3</div>
+        <div class="stat-sub">Hoy</div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <!-- Citas del día -->
+      <div class="card">
+        <div class="card-header">
+          <h2>Citas del día — 13 jun 2026</h2>
+          <span class="text-muted text-sm">Lunes</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Hora</th><th>Paciente</th><th>Médico</th><th>Estado</th></tr></thead>
+            <tbody>
+              <tr><td>08:30</td><td>Ana Torres</td><td>Dr. Muñoz</td><td><span class="badge badge-confirmed">Confirmada</span></td></tr>
+              <tr><td>09:00</td><td>Carlos Ríos</td><td>Dra. Vega</td><td><span class="badge badge-confirmed">Confirmada</span></td></tr>
+              <tr><td>09:30</td><td>María Soto</td><td>Dr. Muñoz</td><td><span class="badge badge-pending">Pendiente</span></td></tr>
+              <tr><td>10:00</td><td>Luis Herrera</td><td>Dr. Pinto</td><td><span class="badge badge-cancelled">Cancelada</span></td></tr>
+              <tr><td>10:30</td><td>Paula Fuentes</td><td>Dra. Vega</td><td><span class="badge badge-confirmed">Confirmada</span></td></tr>
+              <tr><td>11:00</td><td>Jorge Ibáñez</td><td>Dr. Muñoz</td><td><span class="badge badge-completed">Completada</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Actividad reciente -->
+      <div class="card">
+        <div class="card-header"><h2>Actividad reciente</h2></div>
+        <div style="padding:0">
+          <div class="waitlist-item">
+            <span class="dot dot-green"></span>
+            <div class="wl-info">
+              <div class="wl-name">Ana Torres confirmó su cita</div>
+              <div class="wl-detail">Hace 5 min · Telegram</div>
+            </div>
+          </div>
+          <div class="waitlist-item">
+            <span class="dot dot-red"></span>
+            <div class="wl-info">
+              <div class="wl-name">Luis Herrera canceló su hora</div>
+              <div class="wl-detail">Hace 18 min · Web</div>
+            </div>
+          </div>
+          <div class="waitlist-item">
+            <span class="dot dot-orange"></span>
+            <div class="wl-info">
+              <div class="wl-name">Nuevo ingreso en lista de espera</div>
+              <div class="wl-detail">Camila Rojas · Cardiología · Hace 32 min</div>
+            </div>
+          </div>
+          <div class="waitlist-item">
+            <span class="dot dot-green"></span>
+            <div class="wl-info">
+              <div class="wl-name">Cita reagendada exitosamente</div>
+              <div class="wl-detail">Pedro Mora → 16 jun · Hace 45 min</div>
+            </div>
+          </div>
+          <div class="waitlist-item">
+            <span class="dot dot-green"></span>
+            <div class="wl-info">
+              <div class="wl-name">Nueva derivación: Neurología</div>
+              <div class="wl-detail">Dr. Muñoz → Paciente Roberto Díaz</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Métricas -->
+    <div class="three-col">
+      <div class="card">
+        <div class="card-header"><h2>Especialidades activas</h2></div>
+        <div class="card-body">
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font-size:13px">Medicina General</span>
+              <span style="font-size:13px;font-weight:600">9 citas</span>
+            </div>
+            <div style="height:4px;background:var(--border);border-radius:2px"><div style="width:75%;height:100%;background:var(--accent);border-radius:2px"></div></div>
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font-size:13px">Cardiología</span>
+              <span style="font-size:13px;font-weight:600">6 citas</span>
+            </div>
+            <div style="height:4px;background:var(--border);border-radius:2px"><div style="width:50%;height:100%;background:var(--accent);border-radius:2px"></div></div>
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font-size:13px">Neurología</span>
+              <span style="font-size:13px;font-weight:600">5 citas</span>
+            </div>
+            <div style="height:4px;background:var(--border);border-radius:2px"><div style="width:41%;height:100%;background:var(--accent);border-radius:2px"></div></div>
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font-size:13px">Traumatología</span>
+              <span style="font-size:13px;font-weight:600">4 citas</span>
+            </div>
+            <div style="height:4px;background:var(--border);border-radius:2px"><div style="width:33%;height:100%;background:var(--accent);border-radius:2px"></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h2>Conversaciones IA hoy</h2></div>
+        <div class="card-body">
+          <div style="font-size:32px;font-weight:600;margin-bottom:8px">31</div>
+          <div style="display:flex;flex-direction:column;gap:8px;font-size:13px">
+            <div style="display:flex;justify-content:space-between"><span class="text-muted">Agendamientos</span><span>14</span></div>
+            <div style="display:flex;justify-content:space-between"><span class="text-muted">Cancelaciones</span><span>5</span></div>
+            <div style="display:flex;justify-content:space-between"><span class="text-muted">Consultas disponibilidad</span><span>8</span></div>
+            <div style="display:flex;justify-content:space-between"><span class="text-muted">Lista de espera</span><span>4</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h2>Médicos disponibles</h2></div>
+        <div style="padding:0">
+          <div class="waitlist-item">
+            <span class="dot dot-green"></span>
+            <div class="wl-info"><div class="wl-name">Dr. Roberto Muñoz</div><div class="wl-detail">Medicina General · 3 cupos</div></div>
+          </div>
+          <div class="waitlist-item">
+            <span class="dot dot-green"></span>
+            <div class="wl-info"><div class="wl-name">Dra. Carmen Vega</div><div class="wl-detail">Cardiología · 2 cupos</div></div>
+          </div>
+          <div class="waitlist-item">
+            <span class="dot dot-orange"></span>
+            <div class="wl-info"><div class="wl-name">Dr. Andrés Pinto</div><div class="wl-detail">Neurología · Agenda llena</div></div>
+          </div>
+          <div class="waitlist-item">
+            <span class="dot dot-red"></span>
+            <div class="wl-info"><div class="wl-name">Dra. Isabel Lagos</div><div class="wl-detail">Traumatología · Bloqueada</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       PAGE: Appointments
+  ══════════════════════════════════════════ -->
+  <div class="page" id="page-appointments">
+    <div style="display:flex;gap:12px;align-items:center">
+      <input type="text" placeholder="Buscar por paciente, médico…" style="width:260px" id="appt-search" oninput="filterAppts()"/>
+      <select id="appt-filter" onchange="filterAppts()">
+        <option value="">Todos los estados</option>
+        <option value="Confirmada">Confirmada</option>
+        <option value="Pendiente">Pendiente</option>
+        <option value="Cancelada">Cancelada</option>
+        <option value="Completada">Completada</option>
+      </select>
+      <div style="flex:1"></div>
+      <button class="btn btn-primary" onclick="openModal('modal-appointment')">+ Nueva cita</button>
+    </div>
+
+    <div class="card">
+      <div class="table-wrap">
+        <table id="appt-table">
+          <thead><tr><th>#</th><th>Paciente</th><th>Médico</th><th>Especialidad</th><th>Fecha y hora</th><th>Estado</th><th>Acciones</th></tr></thead>
+          <tbody id="appt-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       PAGE: Agenda
+  ══════════════════════════════════════════ -->
+  <div class="page" id="page-agenda">
+    <div style="display:flex;gap:12px;align-items:center">
+      <select id="agenda-doctor">
+        <option>Dr. Roberto Muñoz — Medicina General</option>
+        <option>Dra. Carmen Vega — Cardiología</option>
+        <option>Dr. Andrés Pinto — Neurología</option>
+        <option>Dra. Isabel Lagos — Traumatología</option>
+      </select>
+      <button class="btn btn-outline btn-sm">← Semana anterior</button>
+      <span style="font-size:13px;font-weight:500">9 – 13 Jun 2026</span>
+      <button class="btn btn-outline btn-sm">Semana siguiente →</button>
+      <div style="flex:1"></div>
+      <button class="btn btn-outline btn-sm" onclick="openModal('modal-block')">Bloquear horario</button>
+    </div>
+    <div class="card">
+      <div class="card-body">
+        <div class="agenda-grid">
+          <div class="agenda-col">
+            <div class="agenda-day-header">Lun 9</div>
+            <div class="agenda-slot occupied"><div class="slot-time">08:30</div><div class="slot-name">Ana Torres</div><div class="slot-spec">Control</div></div>
+            <div class="agenda-slot occupied"><div class="slot-time">09:00</div><div class="slot-name">Carlos Ríos</div><div class="slot-spec">Primera vez</div></div>
+            <div class="agenda-slot free"><div class="slot-time">09:30</div><div class="slot-name">Disponible</div></div>
+            <div class="agenda-slot free"><div class="slot-time">10:00</div><div class="slot-name">Disponible</div></div>
+            <div class="agenda-slot occupied"><div class="slot-time">10:30</div><div class="slot-name">Paula Fuentes</div><div class="slot-spec">Control</div></div>
+          </div>
+          <div class="agenda-col">
+            <div class="agenda-day-header">Mar 10</div>
+            <div class="agenda-slot free"><div class="slot-time">08:30</div><div class="slot-name">Disponible</div></div>
+            <div class="agenda-slot occupied"><div class="slot-time">09:00</div><div class="slot-name">Pedro Mora</div><div class="slot-spec">Primera vez</div></div>
+            <div class="agenda-slot blocked"><div class="slot-time">09:30</div><div class="slot-name">Bloqueado</div><div class="slot-spec">Reunión</div></div>
+            <div class="agenda-slot blocked"><div class="slot-time">10:00</div><div class="slot-name">Bloqueado</div><div class="slot-spec">Reunión</div></div>
+            <div class="agenda-slot free"><div class="slot-time">10:30</div><div class="slot-name">Disponible</div></div>
+          </div>
+          <div class="agenda-col">
+            <div class="agenda-day-header">Mié 11</div>
+            <div class="agenda-slot occupied"><div class="slot-time">08:30</div><div class="slot-name">Jorge Ibáñez</div><div class="slot-spec">Control</div></div>
+            <div class="agenda-slot free"><div class="slot-time">09:00</div><div class="slot-name">Disponible</div></div>
+            <div class="agenda-slot free"><div class="slot-time">09:30</div><div class="slot-name">Disponible</div></div>
+            <div class="agenda-slot occupied"><div class="slot-time">10:00</div><div class="slot-name">María Soto</div><div class="slot-spec">Urgencia</div></div>
+            <div class="agenda-slot free"><div class="slot-time">10:30</div><div class="slot-name">Disponible</div></div>
+          </div>
+          <div class="agenda-col">
+            <div class="agenda-day-header">Jue 12</div>
+            <div class="agenda-slot free"><div class="slot-time">08:30</div><div class="slot-name">Disponible</div></div>
+            <div class="agenda-slot free"><div class="slot-time">09:00</div><div class="slot-name">Disponible</div></div>
+            <div class="agenda-slot occupied"><div class="slot-time">09:30</div><div class="slot-name">Roberto Díaz</div><div class="slot-spec">Derivación</div></div>
+            <div class="agenda-slot free"><div class="slot-time">10:00</div><div class="slot-name">Disponible</div></div>
+            <div class="agenda-slot occupied"><div class="slot-time">10:30</div><div class="slot-name">Camila Rojas</div><div class="slot-spec">Control</div></div>
+          </div>
+          <div class="agenda-col">
+            <div class="agenda-day-header">Vie 13</div>
+            <div class="agenda-slot occupied"><div class="slot-time">08:30</div><div class="slot-name">Ana Torres</div><div class="slot-spec">Seguimiento</div></div>
+            <div class="agenda-slot free"><div class="slot-time">09:00</div><div class="slot-name">Disponible</div></div>
+            <div class="agenda-slot free"><div class="slot-time">09:30</div><div class="slot-name">Disponible</div></div>
+            <div class="agenda-slot free"><div class="slot-time">10:00</div><div class="slot-name">Disponible</div></div>
+            <div class="agenda-slot blocked"><div class="slot-time">10:30</div><div class="slot-name">Bloqueado</div><div class="slot-spec">Capacitación</div></div>
+          </div>
+        </div>
+        <div style="display:flex;gap:20px;margin-top:16px;font-size:12px">
+          <div style="display:flex;align-items:center;gap:6px"><span class="dot" style="background:var(--accent)"></span>Ocupado</div>
+          <div style="display:flex;align-items:center;gap:6px"><span class="dot dot-green"></span>Disponible</div>
+          <div style="display:flex;align-items:center;gap:6px"><span class="dot dot-red"></span>Bloqueado</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       PAGE: Patients
+  ══════════════════════════════════════════ -->
+  <div class="page" id="page-patients">
+    <div style="display:flex;gap:12px;align-items:center">
+      <input type="text" placeholder="Buscar paciente por nombre o RUT…" style="width:300px"/>
+      <div style="flex:1"></div>
+      <button class="btn btn-primary" onclick="openModal('modal-patient')">+ Nuevo paciente</button>
+    </div>
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Paciente</th><th>RUT</th><th>Teléfono</th><th>Telegram</th><th>Última cita</th><th>Citas activas</th><th>Acciones</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><div style="display:flex;align-items:center;gap:10px"><div class="avatar">AT</div>Ana Torres</div></td>
+              <td class="text-muted">12.345.678-9</td><td>+56 9 1234 5678</td>
+              <td><span class="badge badge-confirmed">Vinculado</span></td>
+              <td class="text-muted">09 jun 2026</td><td>2</td>
+              <td><button class="btn btn-outline btn-sm" onclick="openModal('modal-patient-detail')">Ver perfil</button></td>
+            </tr>
+            <tr>
+              <td><div style="display:flex;align-items:center;gap:10px"><div class="avatar">CR</div>Carlos Ríos</div></td>
+              <td class="text-muted">11.222.333-4</td><td>+56 9 8765 4321</td>
+              <td><span class="badge badge-confirmed">Vinculado</span></td>
+              <td class="text-muted">10 jun 2026</td><td>1</td>
+              <td><button class="btn btn-outline btn-sm" onclick="openModal('modal-patient-detail')">Ver perfil</button></td>
+            </tr>
+            <tr>
+              <td><div style="display:flex;align-items:center;gap:10px"><div class="avatar">MS</div>María Soto</div></td>
+              <td class="text-muted">10.111.222-3</td><td>+56 9 5555 6666</td>
+              <td><span class="badge badge-pending">No vinculado</span></td>
+              <td class="text-muted">11 jun 2026</td><td>1</td>
+              <td><button class="btn btn-outline btn-sm" onclick="openModal('modal-patient-detail')">Ver perfil</button></td>
+            </tr>
+            <tr>
+              <td><div style="display:flex;align-items:center;gap:10px"><div class="avatar">LH</div>Luis Herrera</div></td>
+              <td class="text-muted">9.888.777-6</td><td>+56 9 3333 2222</td>
+              <td><span class="badge badge-confirmed">Vinculado</span></td>
+              <td class="text-muted">13 jun 2026</td><td>0</td>
+              <td><button class="btn btn-outline btn-sm" onclick="openModal('modal-patient-detail')">Ver perfil</button></td>
+            </tr>
+            <tr>
+              <td><div style="display:flex;align-items:center;gap:10px"><div class="avatar">PF</div>Paula Fuentes</div></td>
+              <td class="text-muted">14.777.888-5</td><td>+56 9 7777 8888</td>
+              <td><span class="badge badge-confirmed">Vinculado</span></td>
+              <td class="text-muted">13 jun 2026</td><td>1</td>
+              <td><button class="btn btn-outline btn-sm" onclick="openModal('modal-patient-detail')">Ver perfil</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       PAGE: Doctors
+  ══════════════════════════════════════════ -->
+  <div class="page" id="page-doctors">
+    <div style="display:flex;justify-content:flex-end">
+      <button class="btn btn-primary" onclick="openModal('modal-doctor')">+ Nuevo médico</button>
+    </div>
+    <div class="three-col">
+      <div class="card">
+        <div class="card-header" style="gap:12px">
+          <div style="display:flex;align-items:center;gap:12px">
+            <div class="avatar" style="width:38px;height:38px;font-size:13px;background:var(--accent-light);color:var(--accent)">RM</div>
+            <div>
+              <div style="font-weight:600;font-size:13px">Dr. Roberto Muñoz</div>
+              <div class="text-muted text-sm">Medicina General</div>
+            </div>
+          </div>
+          <span class="badge badge-confirmed">Activo</span>
+        </div>
+        <div class="card-body" style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;justify-content:space-between;font-size:13px"><span class="text-muted">Citas hoy</span><span>9</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px"><span class="text-muted">Cupos disponibles</span><span>3</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px"><span class="text-muted">Horario</span><span>08:00 – 13:00</span></div>
+          <div style="display:flex;gap:8px;margin-top:6px">
+            <button class="btn btn-outline btn-sm" style="flex:1">Ver agenda</button>
+            <button class="btn btn-outline btn-sm" style="flex:1">Editar</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header" style="gap:12px">
+          <div style="display:flex;align-items:center;gap:12px">
+            <div class="avatar" style="width:38px;height:38px;font-size:13px;background:var(--accent-light);color:var(--accent)">CV</div>
+            <div>
+              <div style="font-weight:600;font-size:13px">Dra. Carmen Vega</div>
+              <div class="text-muted text-sm">Cardiología</div>
+            </div>
+          </div>
+          <span class="badge badge-confirmed">Activo</span>
+        </div>
+        <div class="card-body" style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;justify-content:space-between;font-size:13px"><span class="text-muted">Citas hoy</span><span>6</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px"><span class="text-muted">Cupos disponibles</span><span>2</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px"><span class="text-muted">Horario</span><span>09:00 – 14:00</span></div>
+          <div style="display:flex;gap:8px;margin-top:6px">
+            <button class="btn btn-outline btn-sm" style="flex:1">Ver agenda</button>
+            <button class="btn btn-outline btn-sm" style="flex:1">Editar</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header" style="gap:12px">
+          <div style="display:flex;align-items:center;gap:12px">
+            <div class="avatar" style="width:38px;height:38px;font-size:13px;background:var(--accent-light);color:var(--accent)">AP</div>
+            <div>
+              <div style="font-weight:600;font-size:13px">Dr. Andrés Pinto</div>
+              <div class="text-muted text-sm">Neurología</div>
+            </div>
+          </div>
+          <span class="badge badge-pending">Agenda llena</span>
+        </div>
+        <div class="card-body" style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;justify-content:space-between;font-size:13px"><span class="text-muted">Citas hoy</span><span>5</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px"><span class="text-muted">Cupos disponibles</span><span>0</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px"><span class="text-muted">Horario</span><span>08:30 – 12:30</span></div>
+          <div style="display:flex;gap:8px;margin-top:6px">
+            <button class="btn btn-outline btn-sm" style="flex:1">Ver agenda</button>
+            <button class="btn btn-outline btn-sm" style="flex:1">Editar</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header" style="gap:12px">
+          <div style="display:flex;align-items:center;gap:12px">
+            <div class="avatar" style="width:38px;height:38px;font-size:13px;background:var(--danger-light);color:var(--danger)">IL</div>
+            <div>
+              <div style="font-weight:600;font-size:13px">Dra. Isabel Lagos</div>
+              <div class="text-muted text-sm">Traumatología</div>
+            </div>
+          </div>
+          <span class="badge badge-cancelled">Bloqueada</span>
+        </div>
+        <div class="card-body" style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;justify-content:space-between;font-size:13px"><span class="text-muted">Citas hoy</span><span>4</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px"><span class="text-muted">Cupos disponibles</span><span>—</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px"><span class="text-muted">Bloqueo hasta</span><span>14 jun 2026</span></div>
+          <div style="display:flex;gap:8px;margin-top:6px">
+            <button class="btn btn-outline btn-sm" style="flex:1">Ver agenda</button>
+            <button class="btn btn-outline btn-sm" style="flex:1">Editar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       PAGE: Waitlist
+  ══════════════════════════════════════════ -->
+  <div class="page" id="page-waitlist">
+    <div style="display:flex;gap:12px;align-items:center">
+      <select>
+        <option>Todas las especialidades</option>
+        <option>Medicina General</option>
+        <option>Cardiología</option>
+        <option>Neurología</option>
+        <option>Traumatología</option>
+      </select>
+      <div style="flex:1"></div>
+      <button class="btn btn-primary" onclick="openModal('modal-waitlist')">+ Agregar a lista</button>
+    </div>
+    <div class="card">
+      <div class="card-header"><h2>Lista de espera activa <span style="font-size:12px;font-weight:400;color:var(--muted);margin-left:8px">7 pacientes</span></h2></div>
+      <div id="waitlist-items">
+        <div class="waitlist-item">
+          <div class="wl-rank">1</div>
+          <div class="wl-info">
+            <div class="wl-name">Camila Rojas</div>
+            <div class="wl-detail">Cardiología · Ingresó hace 32 min · RUT 15.123.456-7</div>
+          </div>
+          <span class="badge badge-high">Alta prioridad</span>
+          <div class="wl-actions">
+            <button class="btn btn-primary btn-sm" onclick="assignSlot(this)">Asignar hora</button>
+            <button class="btn btn-outline btn-sm" onclick="removeWaitlist(this)">Quitar</button>
+          </div>
+        </div>
+        <div class="waitlist-item">
+          <div class="wl-rank">2</div>
+          <div class="wl-info">
+            <div class="wl-name">Roberto Díaz</div>
+            <div class="wl-detail">Neurología · Ingresó hace 1h · RUT 9.876.543-2</div>
+          </div>
+          <span class="badge badge-high">Alta prioridad</span>
+          <div class="wl-actions">
+            <button class="btn btn-primary btn-sm" onclick="assignSlot(this)">Asignar hora</button>
+            <button class="btn btn-outline btn-sm" onclick="removeWaitlist(this)">Quitar</button>
+          </div>
+        </div>
+        <div class="waitlist-item">
+          <div class="wl-rank">3</div>
+          <div class="wl-info">
+            <div class="wl-name">Sandra Morales</div>
+            <div class="wl-detail">Medicina General · Ingresó hace 2h · RUT 13.444.555-6</div>
+          </div>
+          <span class="badge badge-normal">Normal</span>
+          <div class="wl-actions">
+            <button class="btn btn-primary btn-sm" onclick="assignSlot(this)">Asignar hora</button>
+            <button class="btn btn-outline btn-sm" onclick="removeWaitlist(this)">Quitar</button>
+          </div>
+        </div>
+        <div class="waitlist-item">
+          <div class="wl-rank">4</div>
+          <div class="wl-info">
+            <div class="wl-name">Felipe Castro</div>
+            <div class="wl-detail">Traumatología · Ingresó hace 3h · RUT 16.222.111-8</div>
+          </div>
+          <span class="badge badge-normal">Normal</span>
+          <div class="wl-actions">
+            <button class="btn btn-primary btn-sm" onclick="assignSlot(this)">Asignar hora</button>
+            <button class="btn btn-outline btn-sm" onclick="removeWaitlist(this)">Quitar</button>
+          </div>
+        </div>
+        <div class="waitlist-item">
+          <div class="wl-rank">5</div>
+          <div class="wl-info">
+            <div class="wl-name">Valentina Núñez</div>
+            <div class="wl-detail">Cardiología · Ingresó hace 4h · RUT 17.333.222-1</div>
+          </div>
+          <span class="badge badge-normal">Normal</span>
+          <div class="wl-actions">
+            <button class="btn btn-primary btn-sm" onclick="assignSlot(this)">Asignar hora</button>
+            <button class="btn btn-outline btn-sm" onclick="removeWaitlist(this)">Quitar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       PAGE: Conversations
+  ══════════════════════════════════════════ -->
+  <div class="page" id="page-conversations">
+    <div style="display:flex;gap:12px;align-items:center">
+      <input type="text" placeholder="Buscar conversación…" style="width:260px"/>
+      <select>
+        <option>Todos los canales</option>
+        <option>Telegram</option>
+        <option>Web</option>
+      </select>
+      <select>
+        <option>Todas las intenciones</option>
+        <option>Agendar</option>
+        <option>Cancelar</option>
+        <option>Reagendar</option>
+        <option>Consulta</option>
+      </select>
+    </div>
+    <div class="conv-list">
+      <div class="conv-item">
+        <div class="conv-header" onclick="toggleConv(this)">
+          <div class="conv-meta">
+            <div class="conv-patient">Ana Torres</div>
+            <span class="badge badge-confirmed">Agendamiento</span>
+            <span class="text-muted text-sm">Telegram</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px">
+            <span class="conv-time">Hoy 08:14</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+        </div>
+        <div class="conv-messages">
+          <div><div class="msg-label">Paciente</div><div class="msg msg-user">Hola, quiero agendar una hora con el Dr. Muñoz para el viernes</div></div>
+          <div><div class="msg-label">Asistente IA</div><div class="msg msg-bot">¡Hola Ana! Tengo disponibilidad el viernes 13 de junio a las 08:30, 09:00 o 10:30. ¿Cuál prefiere?</div></div>
+          <div><div class="msg-label">Paciente</div><div class="msg msg-user">Las 08:30 por favor</div></div>
+          <div><div class="msg-label">Asistente IA</div><div class="msg msg-bot">Perfecto. Su cita quedó agendada para el viernes 13 de junio a las 08:30 con el Dr. Roberto Muñoz (Medicina General). Recibirá una confirmación por correo. ¿Necesita algo más?</div></div>
+          <div><div class="msg-label">Paciente</div><div class="msg msg-user">No, muchas gracias</div></div>
+        </div>
+      </div>
+      <div class="conv-item">
+        <div class="conv-header" onclick="toggleConv(this)">
+          <div class="conv-meta">
+            <div class="conv-patient">Luis Herrera</div>
+            <span class="badge badge-cancelled">Cancelación</span>
+            <span class="text-muted text-sm">Telegram</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px">
+            <span class="conv-time">Hoy 09:42</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+        </div>
+        <div class="conv-messages">
+          <div><div class="msg-label">Paciente</div><div class="msg msg-user">Necesito cancelar mi cita de hoy</div></div>
+          <div><div class="msg-label">Asistente IA</div><div class="msg msg-bot">Encontré su cita de hoy 13 de junio a las 10:00 con el Dr. Pinto. ¿Confirma que desea cancelarla?</div></div>
+          <div><div class="msg-label">Paciente</div><div class="msg msg-user">Sí, confirmo</div></div>
+          <div><div class="msg-label">Asistente IA</div><div class="msg msg-bot">Su cita ha sido cancelada exitosamente. ¿Le gustaría ingresar a la lista de espera para una próxima disponibilidad?</div></div>
+        </div>
+      </div>
+      <div class="conv-item">
+        <div class="conv-header" onclick="toggleConv(this)">
+          <div class="conv-meta">
+            <div class="conv-patient">Pedro Mora</div>
+            <span class="badge badge-pending">Reagendamiento</span>
+            <span class="text-muted text-sm">Telegram</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px">
+            <span class="conv-time">Hoy 10:05</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+        </div>
+        <div class="conv-messages">
+          <div><div class="msg-label">Paciente</div><div class="msg msg-user">Quiero mover mi cita del martes a más adelante en la semana</div></div>
+          <div><div class="msg-label">Asistente IA</div><div class="msg msg-bot">Su cita es el martes 10 a las 09:00 con el Dr. Muñoz. Tengo disponibilidad el jueves 12 a las 09:00 o el viernes 13 a las 09:00. ¿Cuál le acomoda?</div></div>
+          <div><div class="msg-label">Paciente</div><div class="msg msg-user">El lunes 16 si hay algo</div></div>
+          <div><div class="msg-label">Asistente IA</div><div class="msg msg-bot">El lunes 16 tiene disponibilidad a las 08:30, 09:30 y 10:00. ¿Cuál prefiere?</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div><!-- end #main -->
+
+<!-- ─── Modals ─── -->
+<div id="modal-overlay" onclick="closeModalOverlay(event)">
+
+  <!-- New Appointment -->
+  <div class="modal" id="modal-appointment" style="display:none">
+    <div class="modal-header">
+      <h3>Nueva cita médica</h3>
+      <button class="modal-close" onclick="closeModal('modal-appointment')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Paciente</label>
+          <select><option>Ana Torres</option><option>Carlos Ríos</option><option>María Soto</option><option>Luis Herrera</option></select>
+        </div>
+        <div class="form-group">
+          <label>Médico</label>
+          <select><option>Dr. Roberto Muñoz</option><option>Dra. Carmen Vega</option><option>Dr. Andrés Pinto</option></select>
+        </div>
+        <div class="form-group">
+          <label>Fecha</label>
+          <input type="date" value="2026-06-16"/>
+        </div>
+        <div class="form-group">
+          <label>Hora</label>
+          <select><option>08:30</option><option>09:00</option><option>09:30</option><option>10:00</option><option>10:30</option></select>
+        </div>
+        <div class="form-group">
+          <label>Tipo de consulta</label>
+          <select><option>Primera vez</option><option>Control</option><option>Urgencia</option><option>Derivación</option></select>
+        </div>
+        <div class="form-group">
+          <label>Estado inicial</label>
+          <select><option>Pendiente</option><option>Confirmada</option></select>
+        </div>
+        <div class="form-group full">
+          <label>Notas</label>
+          <textarea placeholder="Motivo de consulta u observaciones…"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-appointment')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveAppointment()">Guardar cita</button>
+    </div>
+  </div>
+
+  <!-- New Patient -->
+  <div class="modal" id="modal-patient" style="display:none">
+    <div class="modal-header">
+      <h3>Nuevo paciente</h3>
+      <button class="modal-close" onclick="closeModal('modal-patient')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group"><label>Nombre</label><input type="text" placeholder="Nombre completo"/></div>
+        <div class="form-group"><label>RUT</label><input type="text" placeholder="12.345.678-9"/></div>
+        <div class="form-group"><label>Correo electrónico</label><input type="email" placeholder="correo@ejemplo.cl"/></div>
+        <div class="form-group"><label>Teléfono</label><input type="tel" placeholder="+56 9 1234 5678"/></div>
+        <div class="form-group"><label>Fecha de nacimiento</label><input type="date"/></div>
+        <div class="form-group"><label>Telegram ID</label><input type="text" placeholder="Opcional"/></div>
+        <div class="form-group full"><label>Observaciones</label><textarea placeholder="Alergias, antecedentes relevantes…"></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-patient')">Cancelar</button>
+      <button class="btn btn-primary">Registrar paciente</button>
+    </div>
+  </div>
+
+  <!-- Patient detail -->
+  <div class="modal" id="modal-patient-detail" style="display:none">
+    <div class="modal-header">
+      <h3>Perfil — Ana Torres</h3>
+      <button class="modal-close" onclick="closeModal('modal-patient-detail')">✕</button>
+    </div>
+    <div class="modal-body" style="display:flex;flex-direction:column;gap:20px">
+      <div style="display:flex;gap:16px;align-items:center">
+        <div class="avatar" style="width:48px;height:48px;font-size:16px;background:var(--accent-light);color:var(--accent)">AT</div>
+        <div>
+          <div style="font-weight:600">Ana Torres</div>
+          <div class="text-muted text-sm">RUT 12.345.678-9 · +56 9 1234 5678</div>
+          <span class="badge badge-confirmed" style="margin-top:4px">Telegram vinculado</span>
+        </div>
+      </div>
+      <div>
+        <div class="section-title">Historial de citas</div>
+        <table><thead><tr><th>Fecha</th><th>Médico</th><th>Estado</th></tr></thead>
+        <tbody>
+          <tr><td>09 jun 2026</td><td>Dr. Muñoz</td><td><span class="badge badge-completed">Completada</span></td></tr>
+          <tr><td>13 jun 2026</td><td>Dr. Muñoz</td><td><span class="badge badge-confirmed">Confirmada</span></td></tr>
+          <tr><td>20 jun 2026</td><td>Dra. Vega</td><td><span class="badge badge-pending">Pendiente</span></td></tr>
+        </tbody></table>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-patient-detail')">Cerrar</button>
+      <button class="btn btn-primary" onclick="openModal('modal-appointment')">Nueva cita</button>
+    </div>
+  </div>
+
+  <!-- New Doctor -->
+  <div class="modal" id="modal-doctor" style="display:none">
+    <div class="modal-header">
+      <h3>Nuevo médico</h3>
+      <button class="modal-close" onclick="closeModal('modal-doctor')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group"><label>Nombre completo</label><input type="text" placeholder="Dr. / Dra."/></div>
+        <div class="form-group"><label>Especialidad</label><select><option>Medicina General</option><option>Cardiología</option><option>Neurología</option><option>Traumatología</option></select></div>
+        <div class="form-group"><label>Correo</label><input type="email"/></div>
+        <div class="form-group"><label>Teléfono</label><input type="tel"/></div>
+        <div class="form-group"><label>Hora inicio</label><input type="time" value="08:00"/></div>
+        <div class="form-group"><label>Hora término</label><input type="time" value="13:00"/></div>
+        <div class="form-group"><label>Capacidad diaria</label><input type="number" value="10"/></div>
+        <div class="form-group"><label>Duración por cita (min)</label><input type="number" value="30"/></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-doctor')">Cancelar</button>
+      <button class="btn btn-primary">Registrar médico</button>
+    </div>
+  </div>
+
+  <!-- Block schedule -->
+  <div class="modal" id="modal-block" style="display:none">
+    <div class="modal-header">
+      <h3>Bloquear horario</h3>
+      <button class="modal-close" onclick="closeModal('modal-block')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>Médico</label>
+          <select><option>Dr. Roberto Muñoz</option><option>Dra. Carmen Vega</option><option>Dr. Andrés Pinto</option><option>Dra. Isabel Lagos</option></select>
+        </div>
+        <div class="form-group"><label>Fecha inicio</label><input type="date"/></div>
+        <div class="form-group"><label>Fecha término</label><input type="date"/></div>
+        <div class="form-group"><label>Hora inicio</label><input type="time"/></div>
+        <div class="form-group"><label>Hora término</label><input type="time"/></div>
+        <div class="form-group full"><label>Motivo del bloqueo</label><input type="text" placeholder="Reunión, capacitación, vacaciones…"/></div>
+        <div class="form-group full">
+          <label>
+            <input type="checkbox" style="width:auto;margin-right:6px"/>
+            Suspender agenda completa del período
+          </label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-block')">Cancelar</button>
+      <button class="btn btn-danger">Confirmar bloqueo</button>
+    </div>
+  </div>
+
+  <!-- Add to waitlist -->
+  <div class="modal" id="modal-waitlist" style="display:none">
+    <div class="modal-header">
+      <h3>Agregar a lista de espera</h3>
+      <button class="modal-close" onclick="closeModal('modal-waitlist')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group full"><label>Paciente</label><select><option>Ana Torres</option><option>Carlos Ríos</option><option>María Soto</option></select></div>
+        <div class="form-group"><label>Especialidad solicitada</label><select><option>Medicina General</option><option>Cardiología</option><option>Neurología</option><option>Traumatología</option></select></div>
+        <div class="form-group"><label>Prioridad</label><select><option>Normal</option><option>Alta</option></select></div>
+        <div class="form-group full"><label>Observaciones</label><textarea placeholder="Razón o urgencia…"></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-waitlist')">Cancelar</button>
+      <button class="btn btn-primary">Agregar a lista</button>
+    </div>
+  </div>
+
+</div><!-- end modal-overlay -->
+
+<script>
+// ─── Page navigation ───
+const pageTitles = {
+  dashboard:'Dashboard', appointments:'Citas médicas',
+  agenda:'Agenda semanal', patients:'Pacientes',
+  doctors:'Médicos', waitlist:'Lista de espera', conversations:'Conversaciones'
+};
+function nav(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.querySelectorAll('.sb-item').forEach(i=>{
+    if(i.getAttribute('onclick')===`nav('${id}')`) i.classList.add('active');
+  });
+  document.getElementById('page-title').textContent = pageTitles[id];
+}
+
+// ─── Modals ───
+function openModal(id){
+  document.getElementById('modal-overlay').classList.add('open');
+  document.querySelectorAll('.modal').forEach(m=>m.style.display='none');
+  document.getElementById(id).style.display='block';
+}
+function closeModal(id){
+  document.getElementById(id).style.display='none';
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+function closeModalOverlay(e){
+  if(e.target===document.getElementById('modal-overlay')) document.getElementById('modal-overlay').classList.remove('open');
+}
+
+// ─── Appointments table ───
+const appointments = [
+  {id:1, patient:'Ana Torres', doctor:'Dr. Muñoz', specialty:'Medicina General', datetime:'13 jun · 08:30', status:'Confirmada'},
+  {id:2, patient:'Carlos Ríos', doctor:'Dra. Vega', specialty:'Cardiología', datetime:'13 jun · 09:00', status:'Confirmada'},
+  {id:3, patient:'María Soto', doctor:'Dr. Muñoz', specialty:'Medicina General', datetime:'13 jun · 09:30', status:'Pendiente'},
+  {id:4, patient:'Luis Herrera', doctor:'Dr. Pinto', specialty:'Neurología', datetime:'13 jun · 10:00', status:'Cancelada'},
+  {id:5, patient:'Paula Fuentes', doctor:'Dra. Vega', specialty:'Cardiología', datetime:'13 jun · 10:30', status:'Confirmada'},
+  {id:6, patient:'Jorge Ibáñez', doctor:'Dr. Muñoz', specialty:'Medicina General', datetime:'13 jun · 11:00', status:'Completada'},
+  {id:7, patient:'Pedro Mora', doctor:'Dr. Muñoz', specialty:'Medicina General', datetime:'16 jun · 09:00', status:'Pendiente'},
+  {id:8, patient:'Roberto Díaz', doctor:'Dr. Pinto', specialty:'Neurología', datetime:'12 jun · 09:30', status:'Confirmada'},
+  {id:9, patient:'Camila Rojas', doctor:'Dra. Vega', specialty:'Cardiología', datetime:'12 jun · 10:30', status:'Confirmada'},
+];
+const badgeClass = {Confirmada:'badge-confirmed',Pendiente:'badge-pending',Cancelada:'badge-cancelled',Completada:'badge-completed'};
+function renderAppts(data){
+  const tbody = document.getElementById('appt-tbody');
+  tbody.innerHTML = data.map(a=>`
+    <tr>
+      <td class="text-muted">${a.id}</td>
+      <td>${a.patient}</td>
+      <td>${a.doctor}</td>
+      <td class="text-muted">${a.specialty}</td>
+      <td class="text-muted">${a.datetime}</td>
+      <td><span class="badge ${badgeClass[a.status]}">${a.status}</span></td>
+      <td><div style="display:flex;gap:6px">
+        <button class="btn btn-outline btn-sm">Editar</button>
+        ${a.status!=='Cancelada'&&a.status!=='Completada'?`<button class="btn btn-outline btn-sm" style="color:var(--danger);border-color:var(--danger)" onclick="cancelAppt(${a.id})">Cancelar</button>`:''}
+      </div></td>
+    </tr>`).join('');
+}
+function filterAppts(){
+  const q = document.getElementById('appt-search').value.toLowerCase();
+  const f = document.getElementById('appt-filter').value;
+  renderAppts(appointments.filter(a=>
+    (!q || a.patient.toLowerCase().includes(q) || a.doctor.toLowerCase().includes(q)) &&
+    (!f || a.status===f)
+  ));
+}
+function cancelAppt(id){
+  const a = appointments.find(x=>x.id===id);
+  if(a && confirm(`¿Cancelar la cita de ${a.patient}?`)){a.status='Cancelada'; filterAppts();}
+}
+function saveAppointment(){
+  closeModal('modal-appointment');
+  filterAppts();
+}
+renderAppts(appointments);
+
+// ─── Conversations toggle ───
+function toggleConv(header){
+  const msgs = header.nextElementSibling;
+  msgs.classList.toggle('open');
+}
+
+// ─── Waitlist ───
+function assignSlot(btn){
+  const item = btn.closest('.waitlist-item');
+  const name = item.querySelector('.wl-name').textContent;
+  if(confirm(`¿Asignar hora disponible a ${name}?`)) item.remove();
+}
+function removeWaitlist(btn){
+  const item = btn.closest('.waitlist-item');
+  const name = item.querySelector('.wl-name').textContent;
+  if(confirm(`¿Quitar a ${name} de la lista de espera?`)) item.remove();
+}
+</script>
+</body>
+</html>

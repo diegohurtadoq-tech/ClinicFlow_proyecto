@@ -1,0 +1,14 @@
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - clinicflow_data:/app/data
+    environment:
+      - DATABASE_URL=sqlite:////app/data/clinicflow.db
+
+volumes:
+  clinicflow_data:
