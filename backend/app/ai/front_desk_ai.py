@@ -10,11 +10,13 @@ general o el reporte de lo que la segunda IA efectivamente hizo.
 
 from __future__ import annotations
 
+import datetime as dt
+
 from ..config import get_settings
 from ..schemas.ai import ActionResult
 from .llm_client import LLMClient
 
-SYSTEM_PROMPT = (
+SYSTEM_PROMPT_TEMPLATE = (
     "Eres la recepcionista virtual de ClinicFlow, una clinica medica. "
     "Hablas en español, de forma calida y profesional. Ayudas a pacientes a "
     "agendar, cancelar o reagendar citas, consultar disponibilidad e "
@@ -24,6 +26,9 @@ SYSTEM_PROMPT = (
     "direccion o sucursal -- esa informacion no existe en el sistema y no "
     "aplica. Lo unico que necesitas pedir es: especialidad, el medico (solo "
     "si el paciente quiere elegir uno en particular) y la fecha/hora deseada. "
+    "La fecha y hora actual de referencia es {now} -- usala para interpretar "
+    "expresiones relativas como 'mañana', 'el lunes' o 'la proxima semana'; "
+    "nunca asumas ni menciones otra fecha. "
     "IMPORTANTE: tu nunca ejecutas acciones sobre el sistema directamente. "
     "Si se te entrega un resultado de accion (seccion 'Resultado de la accion' "
     "mas abajo), debes comunicarselo claramente al paciente -- exito o fallo -- "
@@ -60,7 +65,8 @@ class FrontDeskAI:
         `history` es una lista de mensajes {"role": "user"|"assistant", "content": str}
         en orden cronologico, terminando en el ultimo mensaje del paciente.
         """
-        messages: list[dict[str, str]] = [{"role": "system", "content": SYSTEM_PROMPT}]
+        system_prompt = SYSTEM_PROMPT_TEMPLATE.format(now=dt.datetime.now().isoformat())
+        messages: list[dict[str, str]] = [{"role": "system", "content": system_prompt}]
 
         if action_result is not None:
             estado = "Exito" if action_result.success else "Rechazada/Fallida"
