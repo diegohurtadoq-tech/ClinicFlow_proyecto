@@ -165,9 +165,6 @@ textarea{resize:vertical;min-height:80px}
 .auth-card{width:380px;max-width:calc(100vw - 40px);background:var(--card);border:1px solid var(--border);border-radius:10px;padding:28px}
 .auth-logo{font-size:18px;font-weight:600;letter-spacing:-.4px;text-align:center;margin-bottom:4px}
 .auth-sub{font-size:12px;color:var(--muted);text-align:center;margin-bottom:20px}
-.auth-tabs{display:flex;border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:20px}
-.auth-tab{flex:1;text-align:center;padding:8px;font-size:13px;font-weight:500;cursor:pointer;color:var(--muted);background:var(--bg)}
-.auth-tab.active{background:var(--accent);color:#fff}
 .auth-form{display:flex;flex-direction:column;gap:12px}
 .auth-error{font-size:12px;color:var(--danger);min-height:14px}
 .auth-switch{font-size:12px;color:var(--muted);text-align:center;margin-top:14px}
@@ -196,11 +193,6 @@ textarea{resize:vertical;min-height:80px}
   <div class="auth-card">
     <div class="auth-logo">ClinicFlow</div>
     <div class="auth-sub">Gestión clínica</div>
-    <div class="auth-tabs">
-      <div class="auth-tab active" id="auth-tab-patient" onclick="setAuthRole('patient')">Usuario</div>
-      <div class="auth-tab" id="auth-tab-admin" onclick="setAuthRole('admin')">Administrador</div>
-    </div>
-
     <div id="auth-mode-switch" style="display:flex;justify-content:center;gap:16px;margin-bottom:16px;font-size:12px">
       <span class="auth-link active" id="auth-link-login" onclick="setAuthMode('login')" style="cursor:pointer;font-weight:600">Iniciar sesión</span>
       <span class="auth-link" id="auth-link-register" onclick="setAuthMode('register')" style="cursor:pointer;color:var(--muted)">Crear cuenta</span>
@@ -1571,17 +1563,8 @@ function toggleConv(header){
 }
 
 // ─── Auth screen ───
-let authRole = 'patient';
 let authMode = 'login';
 
-function setAuthRole(role){
-  authRole = role;
-  document.getElementById('auth-tab-patient').classList.toggle('active', role==='patient');
-  document.getElementById('auth-tab-admin').classList.toggle('active', role==='admin');
-  document.getElementById('auth-mode-switch').style.display = role==='patient' ? 'flex' : 'none';
-  if(role==='admin') setAuthMode('login');
-  updateAuthFormUI();
-}
 function setAuthMode(mode){
   authMode = mode;
   document.getElementById('auth-link-login').style.fontWeight = mode==='login' ? '600' : '400';
@@ -1591,7 +1574,7 @@ function setAuthMode(mode){
   updateAuthFormUI();
 }
 function updateAuthFormUI(){
-  const isRegister = authRole==='patient' && authMode==='register';
+  const isRegister = authMode==='register';
   document.getElementById('auth-name-group').style.display = isRegister ? 'flex' : 'none';
   document.getElementById('auth-submit').textContent = isRegister ? 'Crear cuenta' : 'Iniciar sesión';
   document.getElementById('auth-error').textContent = '';
@@ -1604,7 +1587,7 @@ async function submitAuth(event){
   errorEl.textContent = '';
   try{
     let data;
-    if(authRole==='patient' && authMode==='register'){
+    if(authMode==='register'){
       const name = document.getElementById('auth-name').value.trim();
       if(!name){ errorEl.textContent = 'Ingresa tu nombre.'; return; }
       data = await apiSendPublic('/api/auth/register', {name, email, password});
