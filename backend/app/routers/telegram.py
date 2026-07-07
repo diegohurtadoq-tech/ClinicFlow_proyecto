@@ -1,22 +1,31 @@
 """
-Router de Telegram: endpoints para generar codigos de vinculacion.
+Router de Telegram: endpoints para generar codigos de vinculacion y recibir webhooks.
 """
 
 from __future__ import annotations
 
+import logging
+import os
+from typing import Any
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
+from telegram import Update
+from telegram.ext import Application, CommandHandler, MessageHandler, filters
 
 from ..auth.dependencies import get_current_user, require_role
 from ..database import get_db
 from ..exceptions import ClinicFlowError
 from ..models.user import Patient, User
 from ..telegram.authenticator import PatientAuthenticator
+from ..telegram.bot_handler import TelegramBotHandler
 
 router = APIRouter(prefix="/api/telegram", tags=["telegram"])
 
+logger = logging.getLogger(__name__)
 _authenticator = PatientAuthenticator()
+_telegram_application: Application | None = None
 
 
 class LinkCodeResponse(BaseModel):
@@ -25,6 +34,29 @@ class LinkCodeResponse(BaseModel):
     code: str
     expires_in_minutes: int
     instructions: str
+
+
+def _get_telegram_application() -> Application:
+    global _telegram_application
+    if _telegram_application is None:
+        token = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
+        if not token:
+            raise RuntimeError("TELEGRAM_BOT_TOKEN no configurado")
+
+        application = Application.builder().token(token).build()
+        bot_handler = TelegramBotHandler(_authenticator)
+
+        application.add_handler(CommandHandler("start", bot_handler.handle_start))
+        application.add_handler(CommandHandler("help", bot_handler.handle_help))
+        application.add_handler(CommandHandler("cancel", bot_handler.handle_cancel))
+        application.add_handler(CommandHandler("linkcode", bot_handler.handle_linkcode))
+        application.add_handler(
+            MessageHandler(filters.TEXT & ~filters.COMMAND, bot_handler.handle_message)
+        )
+        application.initialize()
+        _telegram_application = application
+
+    return _telegram_application
 
 
 @router.post("/link-code", response_model=LinkCodeResponse)
@@ -68,3 +100,19 @@ def unlink_telegram_account(
     db.commit()
 
     return {"message": "Cuenta de Telegram desvinculada correctamente."}
+
+
+@router.post("/webhook")
+async def telegram_webhook(update_payload: dict[str, Any]) -> dict[str, Any]:
+    """Recibe updates de Telegram y los procesa sin usar polling."""
+    try:
+        application = _get_telegram_application()
+        update = Update.de_json(update_payload, application.bot)
+        if update is None:
+            return {"ok": True}
+
+        await application.process_update(update)
+        return {"ok": True}
+    except Exception as exc:  # noqa: BLE001
+        logger.exception("Error procesando webhook de Telegram: %s", exc)
+        return {"ok": False, "error": str(exc)}
