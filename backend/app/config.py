@@ -7,10 +7,12 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 from functools import lru_cache
+from pathlib import Path
 
 from dotenv import load_dotenv
 
-load_dotenv()
+BACKEND_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BACKEND_DIR / ".env")
 
 
 @dataclass(frozen=True)
@@ -30,7 +32,9 @@ def _default_database_url() -> str:
     pero efimero entre invocaciones serverless)."""
     if os.getenv("VERCEL"):
         return "sqlite:////tmp/clinicflow.db"
-    return "sqlite:///./clinicflow.db"
+
+    db_path = BACKEND_DIR / "clinicflow.db"
+    return f"sqlite:///{db_path.as_posix()}"
 
 
 @lru_cache
