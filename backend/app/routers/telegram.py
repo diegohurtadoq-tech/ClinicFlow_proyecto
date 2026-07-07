@@ -36,7 +36,7 @@ class LinkCodeResponse(BaseModel):
     instructions: str
 
 
-def _get_telegram_application() -> Application:
+async def _get_telegram_application() -> Application:
     global _telegram_application
     if _telegram_application is None:
         token = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
@@ -53,7 +53,7 @@ def _get_telegram_application() -> Application:
         application.add_handler(
             MessageHandler(filters.TEXT & ~filters.COMMAND, bot_handler.handle_message)
         )
-        application.initialize()
+        await application.initialize()
         _telegram_application = application
 
     return _telegram_application
@@ -106,7 +106,7 @@ def unlink_telegram_account(
 async def telegram_webhook(update_payload: dict[str, Any]) -> dict[str, Any]:
     """Recibe updates de Telegram y los procesa sin usar polling."""
     try:
-        application = _get_telegram_application()
+        application = await _get_telegram_application()
         update = Update.de_json(update_payload, application.bot)
         if update is None:
             return {"ok": True}
